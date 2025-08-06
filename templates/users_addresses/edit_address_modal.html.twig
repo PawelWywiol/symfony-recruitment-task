@@ -1,109 +1,114 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Address{% endblock %}
+{% block title %}Edit Address
+{% endblock %}
 
 {% block body %}
-<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {{ form_start(form) }}
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            {{ form_label(form.addressType, 'Address Type', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.addressType, {'attr': {'class': 'form-select'}}) }}
-                            {{ form_errors(form.addressType) }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.street, 'Street', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.street, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.street) }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.buildingNumber, 'Building Number', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.buildingNumber, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.buildingNumber) }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.postCode, 'Post Code', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.postCode, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.postCode) }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            {{ form_label(form.city, 'City', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.city, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.city) }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.countryCode, 'Country Code', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.countryCode, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.countryCode) }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.validFrom, 'Valid From', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.validFrom, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.validFrom) }}
-                        </div>
-                    </div>
+    <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body">
+                    {{ form_start(form) }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.addressType, 'Address Type', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.addressType, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.addressType) }}
+                            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Address Preview</label>
-                    <div class="border rounded p-3 bg-light" id="addressPreview">
-                        <div id="previewStreet"></div>
-                        <div id="previewCity"></div>
-                        <div id="previewCountry"></div>
+                            <div class="mb-3">
+                                {{ form_label(form.street, 'Street', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.street, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.street) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.buildingNumber, 'Building Number', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.buildingNumber, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.buildingNumber) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.postCode, 'Post Code', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.postCode, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.postCode) }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.city, 'City', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.city, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.city) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.countryCode, 'Country Code', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.countryCode, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.countryCode) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.validFrom, 'Valid From', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.validFrom, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.validFrom) }}
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {{ form_end(form) }}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="{{ form.vars.id }}" class="btn btn-primary">Save changes</button>
+                    <div class="mb-3">
+                        <label class="form-label">Address Preview</label>
+                        <div class="border rounded p-3 bg-light" id="addressPreview">
+                            <div id="previewStreet"></div>
+                            <div id="previewCity"></div>
+                            <div id="previewCountry"></div>
+                        </div>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="{{ form.vars.id }}" class="btn btn-primary">Save changes</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('turbo:load', function() {
-    const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
-    modal.show();
+    <script>
+        document.addEventListener('turbo:load', function () {
+            const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            modal.show();
 
-    function updatePreview() {
-        const street = document.getElementById('{{ form.street.vars.id }}').value;
-        const buildingNumber = document.getElementById('{{ form.buildingNumber.vars.id }}').value;
-        const postCode = document.getElementById('{{ form.postCode.vars.id }}').value;
-        const city = document.getElementById('{{ form.city.vars.id }}').value;
-        const countryCode = document.getElementById('{{ form.countryCode.vars.id }}').value;
+            function updatePreview() {
+                const street = document.getElementById('{{ form.street.vars.id }}').value;
+                const buildingNumber = document.getElementById('{{ form.buildingNumber.vars.id }}').value;
+                const postCode = document.getElementById('{{ form.postCode.vars.id }}').value;
+                const city = document.getElementById('{{ form.city.vars.id }}').value;
+                const countryCode = document.getElementById('{{ form.countryCode.vars.id }}').value;
 
-        document.getElementById('previewStreet').textContent = `${street} ${buildingNumber}`.trim();
-        document.getElementById('previewCity').textContent = `${postCode} ${city}`.trim();
-        document.getElementById('previewCountry').textContent = countryCode;
-    }
+                document.getElementById('previewStreet').textContent = `${street} ${buildingNumber}`.trim();
+                document.getElementById('previewCity').textContent = `${postCode} ${city}`.trim();
+                document.getElementById('previewCountry').textContent = countryCode;
+            }[
+                '{{ form.street.vars.id }}',
+                '{{ form.buildingNumber.vars.id }}',
+                '{{ form.postCode.vars.id }}',
+                '{{ form.city.vars.id }}',
+                '{{ form.countryCode.vars.id }}'
+            ].forEach(function (id) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                }
+            });
 
-    ['{{ form.street.vars.id }}', '{{ form.buildingNumber.vars.id }}', '{{ form.postCode.vars.id }}', '{{ form.city.vars.id }}', '{{ form.countryCode.vars.id }}'].forEach(function(id) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('input', updatePreview);
-        }
-    });
-
-    updatePreview();
-});
-</script>
+            updatePreview();
+        });
+    </script>
 {% endblock %}

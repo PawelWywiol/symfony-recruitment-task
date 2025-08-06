@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block body %}
-    <section>
+    <section data-controller="address-edit">
         <div class="d-flex mb-3 justify-content-start align-items-center gap-2">
             <a class="btn btn-sm btn-sm" href="{{ path('app_users_index') }}">
                 <twig:ux:icon name="lucide:chevron-left"/>
@@ -13,7 +13,6 @@
                 {{ user.lastName }}</h1>
             <a href="{{ path('app_users_new') }}" class="btn btn-primary ms-auto">Create new</a>
         </div>
-
 
         <ul class="flex-column gap-2 p-0 my-4">
             {% for address in addresses %}
@@ -29,92 +28,24 @@
                             Options
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" data-edit-address href="{{ path('app_users_addresses_edit', { 'id': address.user.id, 'addressType': address.addressType, 'validFrom': address.validFrom|date('U') }) }}">edit</a>
+                            <a class="dropdown-item" data-address-edit-target="editLink" href="{{ path('app_users_addresses_edit', { 'id': address.user.id, 'addressType': address.addressType, 'validFrom': address.validFrom|date('U') }) }}">edit</a>
                         </div>
                     </div>
                 </li>
             {% endfor %}
         </ul>
 
-        <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+        <div class="modal fade" id="editAddressModal" data-address-edit-target="modal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" id="editAddressModalBody"></div>
+                    <div class="modal-body" data-address-edit-target="modalBody" id="editAddressModalBody"></div>
                 </div>
             </div>
         </div>
 
     </section>
-
-    <script>
-        document.addEventListener('turbo:load', function () {
-            document.querySelectorAll('[data-edit-address]').forEach(function (link) {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const url = this.getAttribute('href');
-                    const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
-
-                    fetch(url).then(response => response.text()).then(html => {
-                        document.getElementById('editAddressModalBody').innerHTML = html;
-                        modal.show();
-
-                        initializeAddressPreview();
-                    });
-                });
-            });
-
-            function initializeAddressPreview() {
-                const form = document.querySelector('#editAddressModalBody form');
-                if (! form) {
-                    return;
-                }
-
-
-                function updatePreview() {
-                    const street = document.getElementById('users_addresses_street') ?. value || '';
-                    const buildingNumber = document.getElementById('users_addresses_buildingNumber') ?. value || '';
-                    const postCode = document.getElementById('users_addresses_postCode') ?. value || '';
-                    const city = document.getElementById('users_addresses_city') ?. value || '';
-                    const countryCode = document.getElementById('users_addresses_countryCode') ?. value || '';
-
-                    const previewStreet = document.getElementById('previewStreet');
-                    const previewCity = document.getElementById('previewCity');
-                    const previewCountry = document.getElementById('previewCountry');
-
-                    if (previewStreet) {
-                        previewStreet.textContent = `${street} ${buildingNumber}`.trim();
-                    }
-
-
-                    if (previewCity) {
-                        previewCity.textContent = `${postCode} ${city}`.trim();
-                    }
-
-
-                    if (previewCountry) {
-                        previewCountry.textContent = countryCode;
-                    }
-
-
-                }[
-                    'users_addresses_street',
-                    'users_addresses_buildingNumber',
-                    'users_addresses_postCode',
-                    'users_addresses_city',
-                    'users_addresses_countryCode'
-                ].forEach(function (id) {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.addEventListener('input', updatePreview);
-                    }
-                });
-
-                updatePreview();
-            }
-        });
-    </script>
 {% endblock %}
