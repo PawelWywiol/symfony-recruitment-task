@@ -1,0 +1,38 @@
+@import "./_bootstrap.scss";
+
+html,
+body {
+    position: relative;
+    height: 100%;
+    min-height: 100lvh;
+}
+
+body {
+    main {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100lvh;
+        width: 48rem;
+        max-width: calc(100% - 2rem);
+        margin: 0 auto;
+
+        section {
+            width: 100%;
+        }
+    }
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; // Enable momentum scrolling on iOS
+}
+
+.icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-block;
+    vertical-align: middle;
+}

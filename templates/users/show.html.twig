@@ -1,50 +1,115 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Users{% endblock %}
+{% block title %}Users
+{% endblock %}
 
 {% block body %}
-    <h1>Users</h1>
+    <section>
+        <div class="d-flex mb-3 justify-content-start align-items-center gap-2">
+            <a class="btn btn-sm btn-sm" href="{{ path('app_users_index') }}">
+                <twig:ux:icon name="lucide:chevron-left"/>
+            </a>
+            <h1 class="h5 m-0">{{ user.firstName }}
+                {{ user.lastName }}</h1>
+            <a href="{{ path('app_users_new') }}" class="btn btn-primary ms-auto">Create new</a>
+        </div>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ user.id }}</td>
-            </tr>
-            <tr>
-                <th>FirstName</th>
-                <td>{{ user.firstName }}</td>
-            </tr>
-            <tr>
-                <th>LastName</th>
-                <td>{{ user.lastName }}</td>
-            </tr>
-            <tr>
-                <th>Initials</th>
-                <td>{{ user.initials }}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ user.email }}</td>
-            </tr>
-            <tr>
-                <th>Status</th>
-                <td>{{ user.status }}</td>
-            </tr>
-            <tr>
-                <th>CreatedAt</th>
-                <td>{{ user.createdAt ? user.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-            <tr>
-                <th>UpdatedAt</th>
-                <td>{{ user.updatedAt ? user.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-        </tbody>
-    </table>
 
-    <a href="{{ path('app_users_index') }}">back to list</a>
+        <ul class="flex-column gap-2 p-0 my-4">
+            {% for address in addresses %}
+                <li class="d-flex flex-row justify-content-between align-items-center">
+                    <div class="d-flex flex-column small">
+                        <span>{{ address.addressType }}
+                            valid from
+                            {{ address.validFrom|date('Y-m-d H:i') }}</span>
+                        <span>{{ [address.street, address.buildingNumber, address.postCode, address.city, address.countryCode] | join(', ') }}</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Options
+                        </button>
+                                                 <div class="dropdown-menu">
+                             <a class="dropdown-item" data-edit-address href="{{ path('app_address_edit', {
+                                 'userId': address.user.id,
+                                 'addressType': address.addressType,
+                                 'validFrom': address.validFrom|date('Y-m-d_H-i-s')
+                             }) }}">edit</a>
+                         </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
 
-    <a href="{{ path('app_users_edit', {'id': user.id}) }}">edit</a>
+        <!-- Edit Address Modal -->
+        <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="editAddressModalBody">
+                        <!-- Form will be loaded here via AJAX -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    {{ include('users/_delete_form.html.twig') }}
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle edit address links
+        document.querySelectorAll('[data-edit-address]').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+
+                // Load form via AJAX
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('editAddressModalBody').innerHTML = html;
+                        modal.show();
+
+                        // Initialize address preview
+                        initializeAddressPreview();
+                    });
+            });
+        });
+
+        function initializeAddressPreview() {
+            const form = document.querySelector('#editAddressModalBody form');
+            if (!form) return;
+
+            function updatePreview() {
+                const street = document.getElementById('users_addresses_street')?.value || '';
+                const buildingNumber = document.getElementById('users_addresses_buildingNumber')?.value || '';
+                const postCode = document.getElementById('users_addresses_postCode')?.value || '';
+                const city = document.getElementById('users_addresses_city')?.value || '';
+                const countryCode = document.getElementById('users_addresses_countryCode')?.value || '';
+
+                const previewStreet = document.getElementById('previewStreet');
+                const previewCity = document.getElementById('previewCity');
+                const previewCountry = document.getElementById('previewCountry');
+
+                if (previewStreet) previewStreet.textContent = `${street} ${buildingNumber}`.trim();
+                if (previewCity) previewCity.textContent = `${postCode} ${city}`.trim();
+                if (previewCountry) previewCountry.textContent = countryCode;
+            }
+
+            // Add event listeners to form fields
+            ['users_addresses_street', 'users_addresses_buildingNumber', 'users_addresses_postCode', 'users_addresses_city', 'users_addresses_countryCode'].forEach(function(id) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                }
+            });
+
+            // Initial preview
+            updatePreview();
+        }
+    });
+    </script>
 {% endblock %}

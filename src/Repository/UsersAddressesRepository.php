@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\UsersAddresses;
+use App\Entity\Users;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -11,33 +12,24 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class UsersAddressesRepository extends ServiceEntityRepository
 {
+    public const MAX_ITEMS_PER_PAGE = 5;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, UsersAddresses::class);
     }
 
-    //    /**
-    //     * @return UsersAddresses[] Returns an array of UsersAddresses objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return UsersAddresses[] Returns an array of UsersAddresses objects
+     */
+    public function paginate(int $userId, int $page = 1, int $limit = self::MAX_ITEMS_PER_PAGE): array
+    {
+        $count = $this->count(['user' => $userId]);
 
-    //    public function findOneBySomeField($value): ?UsersAddresses
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        return [
+            'addresses' => $this->findBy(['user' => $userId], ['validFrom' => 'DESC'], $limit, ($page - 1) * $limit),
+            'total_pages' => ceil($count / self::MAX_ITEMS_PER_PAGE),
+            'current_page' => $page,
+        ];
+    }
 }

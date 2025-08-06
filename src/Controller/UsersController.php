@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Users;
+use App\Entity\UsersAddresses;
 use App\Form\UsersType;
+use App\Form\UsersAddressesType;
 use App\Repository\UsersRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,18 +13,21 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/users')]
 final class UsersController extends AbstractController
 {
-    #[Route(name: 'app_users_index', methods: ['GET'])]
-    public function index(UsersRepository $usersRepository): Response
+    public const DEFAULT_PAGE_INDEX = 1;
+
+    #[Route('/users/{page}', name: 'app_users_index', methods: ['GET'])]
+    public function index(UsersRepository $usersRepository, int $page = self::DEFAULT_PAGE_INDEX): Response
     {
-        return $this->render('users/index.html.twig', [
-            'users' => $usersRepository->findAll(),
-        ]);
+        if ($page < self::DEFAULT_PAGE_INDEX) {
+            throw $this->createNotFoundException('Page not found');
+        }
+
+        return $this->render('users/index.html.twig', $usersRepository->paginate($page));
     }
 
-    #[Route('/new', name: 'app_users_new', methods: ['GET', 'POST'])]
+    #[Route('/users/new', name: 'app_users_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = new Users();
@@ -42,15 +47,20 @@ final class UsersController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_users_show', methods: ['GET'])]
-    public function show(Users $user): Response
+    #[Route('/user/{id}/{page}', name: 'app_users_show', methods: ['GET'])]
+    public function show(Users $user, UsersRepository $usersRepository, int $page = 1): Response
     {
+        $result = $usersRepository->getUserAddresses($user->getId(), $page);
+
         return $this->render('users/show.html.twig', [
             'user' => $user,
+            'addresses' => $result['addresses'],
+            'total_pages' => $result['total_pages'],
+            'current_page' => $result['current_page'],
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_users_edit', methods: ['GET', 'POST'])]
+    #[Route('/user/{id}/edit', name: 'app_users_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Users $user, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(UsersType::class, $user);
@@ -68,14 +78,49 @@ final class UsersController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_users_delete', methods: ['POST'])]
+    #[Route('/user/{id}', name: 'app_users_delete', methods: ['POST'])]
     public function delete(Request $request, Users $user, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->getPayload()->getString('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $user->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($user);
             $entityManager->flush();
         }
 
         return $this->redirectToRoute('app_users_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/address/{userId}/{addressType}/{validFrom}/edit', name: 'app_address_edit', methods: ['GET', 'POST'])]
+    public function editAddress(Request $request, int $userId, string $addressType, string $validFrom, EntityManagerInterface $entityManager): Response
+    {
+        // Convert validFrom string back to DateTime
+        $validFromDate = \DateTime::createFromFormat('Y-m-d_H-i-s', $validFrom);
+        if (!$validFromDate) {
+            throw $this->createNotFoundException('Invalid date format');
+        }
+
+        // Find the address using the composite key
+        $address = $entityManager->getRepository(UsersAddresses::class)->findOneBy([
+            'user' => $userId,
+            'addressType' => $addressType,
+            'validFrom' => $validFromDate
+        ]);
+
+        if (!$address) {
+            throw $this->createNotFoundException('Address not found');
+        }
+
+        $form = $this->createForm(UsersAddressesType::class, $address);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_users_show', ['id' => $address->getUser()->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('users/edit_address_form.html.twig', [
+            'address' => $address,
+            'form' => $form,
+        ]);
     }
 }

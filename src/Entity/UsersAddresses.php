@@ -8,7 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 use DateTime;
 
 #[ORM\Entity(repositoryClass: UsersAddressesRepository::class)]
-#[ORM\Table(name: 'users_addresses')]
+#[ORM\Table(name: 'users_addresses', uniqueConstraints: [
+    new ORM\UniqueConstraint(name: 'user_address_type_valid_from', columns: ['user_id', 'address_type', 'valid_from'])
+])]
 #[ORM\HasLifecycleCallbacks]
 class UsersAddresses
 {
@@ -17,11 +19,9 @@ class UsersAddresses
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Users $user = null;
 
-    #[ORM\Id]
     #[ORM\Column(length: 7)]
     private ?string $addressType = null;
 
-    #[ORM\Id]
     #[ORM\Column(name: 'valid_from', type: Types::DATETIME_MUTABLE)]
     private DateTime $validFrom;
 
