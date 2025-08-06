@@ -36,6 +36,7 @@ class UsersRepository extends ServiceEntityRepository
     public function getUserAddresses(int $userId, int $page = 1): array
     {
         $user = $this->find($userId);
+
         if (!$user) {
             return [];
         }

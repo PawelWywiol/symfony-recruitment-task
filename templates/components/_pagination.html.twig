@@ -1,15 +1,15 @@
 <nav aria-label="Users pagination" class="d-flex justify-content-center mt-4">
     <ul class="pagination">
         <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="{{ path('app_users_index', { page: current_page - 1 }) }}">Previous</a>
+            <a class="page-link" href="{{ path('app_users_list', { page: current_page - 1 }) }}">Previous</a>
         </li>
         {% for page in 1..total_pages %}
             <li class="page-item {% if page == current_page %}active{% endif %}">
-                <a class="page-link" href="{{ path('app_users_index', { page: page }) }}">{{ page }}</a>
+                <a class="page-link" href="{{ path('app_users_list', { page: page }) }}">{{ page }}</a>
             </li>
         {% endfor %}
         <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ path('app_users_index', { page: current_page + 1 }) }}">Next</a>
+            <a class="page-link" href="{{ path('app_users_list', { page: current_page + 1 }) }}">Next</a>
         </li>
     </ul>
 </nav>

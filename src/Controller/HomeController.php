@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Repository\UsersRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -11,8 +10,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class HomeController extends AbstractController
 {
     #[Route(name: 'app_home_index')]
-    public function index(UsersRepository $usersRepository): Response
+    public function index(): Response
     {
-        return $this->redirectToRoute('app_users_index');
+        return $this->redirectToRoute('app_users_list', ['page' => UsersController::DEFAULT_PAGE_INDEX]);
     }
 }

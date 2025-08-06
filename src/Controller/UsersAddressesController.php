@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Users;
 use App\Entity\UsersAddresses;
 use App\Form\UsersAddressesType;
 use App\Repository\UsersAddressesRepository;
@@ -11,20 +12,38 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/users/addresses')]
+#[Route('/user/{id}/addresses')]
 final class UsersAddressesController extends AbstractController
 {
-    #[Route(name: 'app_users_addresses_index', methods: ['GET'])]
-    public function index(UsersAddressesRepository $usersAddressesRepository): Response
+    public const DEFAULT_PAGE_INDEX = 1;
+
+    #[Route('/list/{page}', name: 'app_users_addresses_list', methods: ['GET'])]
+    public function list(Users $user, UsersAddressesRepository $usersAddressesRepository, int $page): Response
     {
-        return $this->render('users_addresses/index.html.twig', [
-            'users_addresses' => $usersAddressesRepository->findAll(),
+        if ($user === null) {
+            throw $this->createNotFoundException('User not found');
+        }
+
+        if ($page < self::DEFAULT_PAGE_INDEX) {
+            throw $this->createNotFoundException('Page not found');
+        }
+
+        $paginateResult = $usersAddressesRepository->paginate($user->getId(), $page);
+        return $this->render('users_addresses/list.html.twig', [
+            'user' => $user,
+            'addresses' => $paginateResult['addresses'],
+            'total_pages' => $paginateResult['total_pages'],
+            'current_page' => $paginateResult['current_page'],
         ]);
     }
 
     #[Route('/new', name: 'app_users_addresses_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Users $user, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if ($user === null) {
+            throw $this->createNotFoundException('User not found');
+        }
+
         $usersAddress = new UsersAddresses();
         $form = $this->createForm(UsersAddressesType::class, $usersAddress);
         $form->handleRequest($request);
@@ -33,7 +52,10 @@ final class UsersAddressesController extends AbstractController
             $entityManager->persist($usersAddress);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_users_addresses_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_users_list', [
+                'id' => $user->getId(),
+                'page' => self::DEFAULT_PAGE_INDEX
+            ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('users_addresses/new.html.twig', [
@@ -42,40 +64,92 @@ final class UsersAddressesController extends AbstractController
         ]);
     }
 
-    #[Route('/{user}', name: 'app_users_addresses_show', methods: ['GET'])]
-    public function show(UsersAddresses $usersAddress): Response
-    {
-        return $this->render('users_addresses/show.html.twig', [
-            'users_address' => $usersAddress,
-        ]);
-    }
+    #[Route('/edit/{addressType}/{validFrom}', name: 'app_users_addresses_edit', methods: ['GET', 'POST'])]
+    public function edit(
+        Users $user,
+        Request $request,
+        string $addressType,
+        string $validFrom,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if ($user === null) {
+            throw $this->createNotFoundException('User not found');
+        }
 
-    #[Route('/{user}/edit', name: 'app_users_addresses_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, UsersAddresses $usersAddress, EntityManagerInterface $entityManager): Response
-    {
-        $form = $this->createForm(UsersAddressesType::class, $usersAddress);
+        $validFromTimestamp = (int) $validFrom;
+        $validFromDate = new \DateTime();
+        $validFromDate->setTimestamp($validFromTimestamp);
+
+        $validFromDateMin = clone $validFromDate;
+        $validFromDateMin->modify('-1 second');
+        $validFromDateMax = clone $validFromDate;
+        $validFromDateMax->modify('+1 second');
+
+        $qb = $entityManager->createQueryBuilder();
+        $qb->select('a')
+            ->from(UsersAddresses::class, 'a')
+            ->where('a.user = :userId')
+            ->andWhere('a.addressType = :addressType')
+            ->andWhere('a.validFrom BETWEEN :validFromMin AND :validFromMax')
+            ->setParameter('userId', $user->getId())
+            ->setParameter('addressType', $addressType)
+            ->setParameter('validFromMin', $validFromDateMin)
+            ->setParameter('validFromMax', $validFromDateMax)
+            ->setMaxResults(1);
+
+        $address = $qb->getQuery()->getOneOrNullResult();
+
+        if (!$address) {
+            throw $this->createNotFoundException('Address not found');
+        }
+
+        $form = $this->createForm(UsersAddressesType::class, $address);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_users_addresses_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_users_list', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('users_addresses/edit.html.twig', [
-            'users_address' => $usersAddress,
+        return $this->render('users_addresses/edit_address_form.html.twig', [
+            'address' => $address,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{user}', name: 'app_users_addresses_delete', methods: ['POST'])]
-    public function delete(Request $request, UsersAddresses $usersAddress, EntityManagerInterface $entityManager): Response
-    {
-        if ($this->isCsrfTokenValid('delete'.$usersAddress->getUser(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($usersAddress);
+    #[Route('/delete/{addressType}/{validFrom}', name: 'app_users_addresses_delete', methods: ['POST'])]
+    public function delete(
+        Request $request,
+        string $addressType,
+        string $validFrom,
+        EntityManagerInterface $entityManager,
+        Users $user
+    ): Response {
+        if ($user === null) {
+            throw $this->createNotFoundException('User not found');
+        }
+
+        if ($this->isCsrfTokenValid(
+            'delete' . $addressType . $validFrom,
+            $request->getPayload()->getString('_token')
+        )) {
+            $qb = $entityManager->createQueryBuilder();
+            $qb->delete(UsersAddresses::class, 'a')
+                ->where('a.user = :userId')
+                ->andWhere('a.addressType = :addressType')
+                ->andWhere('a.validFrom = :validFrom')
+                ->setParameter('userId', $user->getId())
+                ->setParameter('addressType', $addressType)
+                ->setParameter('validFrom', $validFrom);
+
+            $qb->getQuery()->execute();
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_users_addresses_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_users_list', [
+            'id' => $user->getId(),
+            'page' => self::DEFAULT_PAGE_INDEX
+        ], Response::HTTP_SEE_OTHER);
     }
 }
