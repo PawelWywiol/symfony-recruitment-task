@@ -92,18 +92,28 @@ final class UsersController extends AbstractController
     #[Route('/address/{userId}/{addressType}/{validFrom}/edit', name: 'app_address_edit', methods: ['GET', 'POST'])]
     public function editAddress(Request $request, int $userId, string $addressType, string $validFrom, EntityManagerInterface $entityManager): Response
     {
-        // Convert validFrom string back to DateTime
-        $validFromDate = \DateTime::createFromFormat('Y-m-d_H-i-s', $validFrom);
-        if (!$validFromDate) {
-            throw $this->createNotFoundException('Invalid date format');
-        }
+        $validFromTimestamp = (int) $validFrom;
+        $validFromDate = new \DateTime();
+        $validFromDate->setTimestamp($validFromTimestamp);
 
-        // Find the address using the composite key
-        $address = $entityManager->getRepository(UsersAddresses::class)->findOneBy([
-            'user' => $userId,
-            'addressType' => $addressType,
-            'validFrom' => $validFromDate
-        ]);
+        $validFromDateMin = clone $validFromDate;
+        $validFromDateMin->modify('-1 second');
+        $validFromDateMax = clone $validFromDate;
+        $validFromDateMax->modify('+1 second');
+
+        $qb = $entityManager->createQueryBuilder();
+        $qb->select('a')
+           ->from(UsersAddresses::class, 'a')
+           ->where('a.user = :userId')
+           ->andWhere('a.addressType = :addressType')
+           ->andWhere('a.validFrom BETWEEN :validFromMin AND :validFromMax')
+           ->setParameter('userId', $userId)
+           ->setParameter('addressType', $addressType)
+           ->setParameter('validFromMin', $validFromDateMin)
+           ->setParameter('validFromMax', $validFromDateMax)
+           ->setMaxResults(1);
+
+        $address = $qb->getQuery()->getOneOrNullResult();
 
         if (!$address) {
             throw $this->createNotFoundException('Address not found');

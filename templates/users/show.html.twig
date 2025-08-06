@@ -32,7 +32,7 @@
                              <a class="dropdown-item" data-edit-address href="{{ path('app_address_edit', {
                                  'userId': address.user.id,
                                  'addressType': address.addressType,
-                                 'validFrom': address.validFrom|date('Y-m-d_H-i-s')
+                                 'validFrom': address.validFrom|date('U')
                              }) }}">edit</a>
                          </div>
                     </div>
