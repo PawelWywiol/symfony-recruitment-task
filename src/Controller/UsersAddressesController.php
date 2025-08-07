@@ -26,7 +26,12 @@ final class UsersAddressesController extends AbstractController
             throw $this->createNotFoundException('Page not found');
         }
 
-        $paginateResult = $usersAddressesRepository->paginate($user->getId(), $page);
+        $userId = $user->getId();
+        if ($userId === null) {
+            throw $this->createNotFoundException('User not found');
+        }
+
+        $paginateResult = $usersAddressesRepository->paginate($userId, $page);
         return $this->render('users_addresses/list.html.twig', [
             'user' => $user,
             'addresses' => $paginateResult['addresses'],

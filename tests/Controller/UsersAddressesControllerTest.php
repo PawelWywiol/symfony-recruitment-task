@@ -8,6 +8,7 @@ use App\Entity\Users;
 use App\Entity\UsersAddresses;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -15,14 +16,28 @@ final class UsersAddressesControllerTest extends WebTestCase
 {
     private KernelBrowser $client;
     private EntityManagerInterface $manager;
+
+    /**
+     * @var EntityRepository<UsersAddresses>
+     */
     private EntityRepository $usersAddressRepository;
+
+    /**
+     * @var EntityRepository<Users>
+     */
     private EntityRepository $usersRepository;
     private Users $testUser;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        $this->manager = static::getContainer()->get('doctrine')->getManager();
+        
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = self::getContainer()->get(ManagerRegistry::class);
+
+        /** @var EntityManagerInterface $manager */
+        $manager = $doctrine->getManager();
+        $this->manager = $manager;
         $this->usersAddressRepository = $this->manager->getRepository(UsersAddresses::class);
         $this->usersRepository = $this->manager->getRepository(Users::class);
 

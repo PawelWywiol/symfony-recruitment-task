@@ -7,6 +7,7 @@ namespace App\Tests\Controller;
 use App\Entity\Users;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -14,12 +15,20 @@ final class UsersControllerTest extends WebTestCase
 {
     private KernelBrowser $client;
     private EntityManagerInterface $manager;
+    /**
+     * @var EntityRepository<Users>
+     */
     private EntityRepository $userRepository;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        $this->manager = static::getContainer()->get('doctrine')->getManager();
+
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = static::getContainer()->get(ManagerRegistry::class);
+        /** @var EntityManagerInterface $manager */
+        $manager = $doctrine->getManager();
+        $this->manager = $manager;
         $this->userRepository = $this->manager->getRepository(Users::class);
 
         // Clean up existing data
@@ -64,7 +73,7 @@ final class UsersControllerTest extends WebTestCase
     public function testNewSubmit(): void
     {
         $this->client->request('GET', '/users/new');
-        
+
         $this->client->submitForm('Save', [
             'user[firstName]' => 'John',
             'user[lastName]' => 'Doe',
@@ -74,7 +83,7 @@ final class UsersControllerTest extends WebTestCase
         ]);
 
         self::assertResponseRedirects();
-        
+
         $users = $this->userRepository->findAll();
         self::assertCount(1, $users);
         self::assertSame('John', $users[0]->getFirstName());
@@ -85,7 +94,7 @@ final class UsersControllerTest extends WebTestCase
     public function testNewSubmitWithValidationErrors(): void
     {
         $this->client->request('GET', '/users/new');
-        
+
         $this->client->submitForm('Save', [
             'user[firstName]' => '',
             'user[lastName]' => '', // Required field
@@ -104,7 +113,7 @@ final class UsersControllerTest extends WebTestCase
         $user->setLastName('Doe');
         $user->setEmail('john.doe@example.com');
         $user->setStatus('ACTIVE');
-        
+
         $this->manager->persist($user);
         $this->manager->flush();
 
@@ -122,12 +131,12 @@ final class UsersControllerTest extends WebTestCase
         $user->setLastName('Doe');
         $user->setEmail('john.doe@example.com');
         $user->setStatus('ACTIVE');
-        
+
         $this->manager->persist($user);
         $this->manager->flush();
 
         $this->client->request('GET', sprintf('/users/edit/%d', $user->getId()));
-        
+
         $this->client->submitForm('Update', [
             'user[firstName]' => 'Jane',
             'user[lastName]' => 'Smith',
@@ -137,7 +146,7 @@ final class UsersControllerTest extends WebTestCase
         ]);
 
         self::assertResponseRedirects();
-        
+
         $this->manager->refresh($user);
         self::assertSame('Jane', $user->getFirstName());
         self::assertSame('Smith', $user->getLastName());
@@ -160,12 +169,12 @@ final class UsersControllerTest extends WebTestCase
         $user->setLastName('Doe');
         $user->setEmail('john.doe@example.com');
         $user->setStatus('ACTIVE');
-        
+
         $this->manager->persist($user);
         $this->manager->flush();
 
         $userId = $user->getId();
-        
+
         $this->client->request('POST', sprintf('/users/delete/%d', $userId), [], [], [
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
         ], '_token=test_token');
@@ -189,7 +198,7 @@ final class UsersControllerTest extends WebTestCase
         $user->setLastName('Doe');
         $user->setEmail('john.doe@example.com');
         $user->setStatus('ACTIVE');
-        
+
         $this->manager->persist($user);
         $this->manager->flush();
 

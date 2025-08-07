@@ -19,6 +19,7 @@ class Users
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column]
+    // @phpstan-ignore property.unusedType
     private ?int $id = null;
 
     #[ORM\Column(length: 60, nullable: true)]
@@ -42,6 +43,9 @@ class Users
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
     private DateTime $updatedAt;
 
+    /**
+     * @var Collection<int, UsersAddresses>
+     */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UsersAddresses::class, orphanRemoval: true)]
     private Collection $addresses;
 
