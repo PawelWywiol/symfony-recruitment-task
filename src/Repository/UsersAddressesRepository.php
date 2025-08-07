@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\UsersAddresses;
-use App\Entity\Users;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -29,8 +28,8 @@ class UsersAddressesRepository extends ServiceEntityRepository
         $count = $this->count(['user' => $userId]);
 
         return [
-            'addresses' => $this->findBy(['user' => $userId], ['validFrom' => 'DESC'], $limit, ($page - 1) * $limit),
-            'total_pages' => ceil($count / self::MAX_ITEMS_PER_PAGE),
+            'addresses'    => $this->findBy(['user' => $userId], ['validFrom' => 'DESC'], $limit, ($page - 1) * $limit),
+            'total_pages'  => ceil($count / self::MAX_ITEMS_PER_PAGE),
             'current_page' => $page,
         ];
     }

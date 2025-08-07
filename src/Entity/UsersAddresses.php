@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UsersAddressesRepository;
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use DateTime;
+use InvalidArgumentException;
+
+use function in_array;
 
 #[ORM\Entity(repositoryClass: UsersAddressesRepository::class)]
 #[ORM\Table(name: 'users_addresses', uniqueConstraints: [
-    new ORM\UniqueConstraint(name: 'user_address_type_valid_from', columns: ['user_id', 'address_type', 'valid_from'])
+    new ORM\UniqueConstraint(name: 'user_address_type_valid_from', columns: ['user_id', 'address_type', 'valid_from']),
 ])]
 #[ORM\HasLifecycleCallbacks]
 class UsersAddresses
@@ -80,9 +83,8 @@ class UsersAddresses
 
     public function setAddressType(string $addressType): static
     {
-        // Validate address type
-        if (!in_array($addressType, ['HOME', 'INVOICE', 'POST', 'WORK'])) {
-            throw new \InvalidArgumentException('Invalid address type');
+        if (!in_array($addressType, ['HOME', 'INVOICE', 'POST', 'WORK'], true)) {
+            throw new InvalidArgumentException('Invalid address type');
         }
 
         $this->addressType = $addressType;

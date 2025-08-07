@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UsersRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use DateTime;
 
 #[ORM\Entity(repositoryClass: UsersRepository::class)]
 #[ORM\Table(name: 'users')]
@@ -43,9 +43,7 @@ class Users
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
     private DateTime $updatedAt;
 
-    /**
-     * @var Collection<int, UsersAddresses>
-     */
+    /** @var Collection<int, UsersAddresses> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UsersAddresses::class, orphanRemoval: true)]
     private Collection $addresses;
 

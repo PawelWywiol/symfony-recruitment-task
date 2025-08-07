@@ -11,6 +11,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+/**
+ * @internal
+ */
 final class UsersControllerTest extends WebTestCase
 {
     private KernelBrowser $client;
@@ -22,10 +25,10 @@ final class UsersControllerTest extends WebTestCase
 
     protected function setUp(): void
     {
-        $this->client = static::createClient();
+        $this->client = self::createClient();
 
         /** @var ManagerRegistry $doctrine */
-        $doctrine = static::getContainer()->get(ManagerRegistry::class);
+        $doctrine = self::getContainer()->get(ManagerRegistry::class);
         /** @var EntityManagerInterface $manager */
         $manager = $doctrine->getManager();
         $this->manager = $manager;
@@ -76,10 +79,10 @@ final class UsersControllerTest extends WebTestCase
 
         $this->client->submitForm('Save', [
             'user[firstName]' => 'John',
-            'user[lastName]' => 'Doe',
-            'user[initials]' => 'JD',
-            'user[email]' => 'john.doe@example.com',
-            'user[status]' => 'ACTIVE',
+            'user[lastName]'  => 'Doe',
+            'user[initials]'  => 'JD',
+            'user[email]'     => 'john.doe@example.com',
+            'user[status]'    => 'ACTIVE',
         ]);
 
         self::assertResponseRedirects();
@@ -97,9 +100,9 @@ final class UsersControllerTest extends WebTestCase
 
         $this->client->submitForm('Save', [
             'user[firstName]' => '',
-            'user[lastName]' => '', // Required field
-            'user[email]' => 'invalid-email', // Invalid email
-            'user[status]' => 'ACTIVE',
+            'user[lastName]'  => '', // Required field
+            'user[email]'     => 'invalid-email', // Invalid email
+            'user[status]'    => 'ACTIVE',
         ]);
 
         self::assertResponseStatusCodeSame(200); // Form should be re-displayed with errors
@@ -139,10 +142,10 @@ final class UsersControllerTest extends WebTestCase
 
         $this->client->submitForm('Update', [
             'user[firstName]' => 'Jane',
-            'user[lastName]' => 'Smith',
-            'user[initials]' => 'JS',
-            'user[email]' => 'jane.smith@example.com',
-            'user[status]' => 'INACTIVE',
+            'user[lastName]'  => 'Smith',
+            'user[initials]'  => 'JS',
+            'user[email]'     => 'jane.smith@example.com',
+            'user[status]'    => 'INACTIVE',
         ]);
 
         self::assertResponseRedirects();

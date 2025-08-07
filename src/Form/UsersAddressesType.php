@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Entity\Users;
 use App\Entity\UsersAddresses;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
@@ -21,31 +19,31 @@ class UsersAddressesType extends AbstractType
         $builder
             ->add('addressType', ChoiceType::class, [
                 'choices' => [
-                    'Home' => 'HOME',
-                    'Work' => 'WORK',
+                    'Home'    => 'HOME',
+                    'Work'    => 'WORK',
                     'Invoice' => 'INVOICE',
-                    'Post' => 'POST',
+                    'Post'    => 'POST',
                 ],
-                'label' => 'Address Type'
+                'label' => 'Address Type',
             ])
             ->add('validFrom', DateTimeType::class, [
                 'widget' => 'single_text',
-                'label' => 'Valid From'
+                'label'  => 'Valid From',
             ])
             ->add('street', TextType::class, [
-                'label' => 'Street'
+                'label' => 'Street',
             ])
             ->add('buildingNumber', TextType::class, [
-                'label' => 'Building Number'
+                'label' => 'Building Number',
             ])
             ->add('postCode', TextType::class, [
-                'label' => 'Post Code'
+                'label' => 'Post Code',
             ])
             ->add('city', TextType::class, [
-                'label' => 'City'
+                'label' => 'City',
             ])
             ->add('countryCode', TextType::class, [
-                'label' => 'Country Code (ISO3166-1 alpha-3)'
+                'label' => 'Country Code (ISO3166-1 alpha-3)',
             ])
         ;
     }

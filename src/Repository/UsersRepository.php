@@ -28,8 +28,8 @@ class UsersRepository extends ServiceEntityRepository
         $count = $this->count();
 
         return [
-            'users' => $this->findBy([], ['id' => 'ASC'], $limit, ($page - 1) * $limit),
-            'total_pages' => ceil($count / self::MAX_ITEMS_PER_PAGE),
+            'users'        => $this->findBy([], ['id' => 'ASC'], $limit, ($page - 1) * $limit),
+            'total_pages'  => ceil($count / self::MAX_ITEMS_PER_PAGE),
             'current_page' => $page,
         ];
     }

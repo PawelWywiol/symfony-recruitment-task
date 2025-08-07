@@ -90,7 +90,8 @@
         "phpstan": "phpstan analyse",
         "phpstan:baseline": "phpstan analyse --generate-baseline",
         "test": "php bin/phpunit",
-        "cs-fixer:dry": "vendor/bin/php-cs-fixer fix --dry-run --verbose --diff"
+        "cs-fixer:dry": "vendor/bin/php-cs-fixer fix --dry-run --verbose --diff",
+        "cs-fixer:fix": "vendor/bin/php-cs-fixer fix --verbose --diff"
     },
     "conflict": {
         "symfony/symfony": "*"

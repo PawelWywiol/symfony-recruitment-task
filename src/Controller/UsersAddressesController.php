@@ -8,6 +8,7 @@ use App\Entity\Users;
 use App\Entity\UsersAddresses;
 use App\Form\UsersAddressesType;
 use App\Repository\UsersAddressesRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,15 +28,17 @@ final class UsersAddressesController extends AbstractController
         }
 
         $userId = $user->getId();
+
         if ($userId === null) {
             throw $this->createNotFoundException('User not found');
         }
 
         $paginateResult = $usersAddressesRepository->paginate($userId, $page);
+
         return $this->render('users_addresses/list.html.twig', [
-            'user' => $user,
-            'addresses' => $paginateResult['addresses'],
-            'total_pages' => $paginateResult['total_pages'],
+            'user'         => $user,
+            'addresses'    => $paginateResult['addresses'],
+            'total_pages'  => $paginateResult['total_pages'],
             'current_page' => $paginateResult['current_page'],
         ]);
     }
@@ -52,14 +55,14 @@ final class UsersAddressesController extends AbstractController
             $entityManager->flush();
 
             return $this->redirectToRoute('app_users_list', [
-                'id' => $user->getId(),
-                'page' => self::DEFAULT_PAGE_INDEX
+                'id'   => $user->getId(),
+                'page' => self::DEFAULT_PAGE_INDEX,
             ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('users_addresses/new.html.twig', [
             'users_address' => $usersAddress,
-            'form' => $form,
+            'form'          => $form,
         ]);
     }
 
@@ -72,7 +75,7 @@ final class UsersAddressesController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response {
         $validFromTimestamp = (int) $validFrom;
-        $validFromDate = new \DateTime();
+        $validFromDate = new DateTime();
         $validFromDate->setTimestamp($validFromTimestamp);
 
         $validFromDateMin = clone $validFromDate;
@@ -90,7 +93,8 @@ final class UsersAddressesController extends AbstractController
             ->setParameter('addressType', $addressType)
             ->setParameter('validFromMin', $validFromDateMin)
             ->setParameter('validFromMax', $validFromDateMax)
-            ->setMaxResults(1);
+            ->setMaxResults(1)
+        ;
 
         $address = $qb->getQuery()->getOneOrNullResult();
 
@@ -109,7 +113,7 @@ final class UsersAddressesController extends AbstractController
 
         return $this->render('users_addresses/edit_address_form.html.twig', [
             'address' => $address,
-            'form' => $form,
+            'form'    => $form,
         ]);
     }
 
@@ -119,11 +123,11 @@ final class UsersAddressesController extends AbstractController
         string $addressType,
         string $validFrom,
         EntityManagerInterface $entityManager,
-        Users $user
+        Users $user,
     ): Response {
         if ($this->isCsrfTokenValid(
             'delete' . $addressType . $validFrom,
-            $request->getPayload()->getString('_token')
+            $request->getPayload()->getString('_token'),
         )) {
             $qb = $entityManager->createQueryBuilder();
             $qb->delete(UsersAddresses::class, 'a')
@@ -132,15 +136,16 @@ final class UsersAddressesController extends AbstractController
                 ->andWhere('a.validFrom = :validFrom')
                 ->setParameter('userId', $user->getId())
                 ->setParameter('addressType', $addressType)
-                ->setParameter('validFrom', $validFrom);
+                ->setParameter('validFrom', $validFrom)
+            ;
 
             $qb->getQuery()->execute();
             $entityManager->flush();
         }
 
         return $this->redirectToRoute('app_users_list', [
-            'id' => $user->getId(),
-            'page' => self::DEFAULT_PAGE_INDEX
+            'id'   => $user->getId(),
+            'page' => self::DEFAULT_PAGE_INDEX,
         ], Response::HTTP_SEE_OTHER);
     }
 }
