@@ -31,7 +31,7 @@ final class UsersAddressesControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        
+
         /** @var ManagerRegistry $doctrine */
         $doctrine = self::getContainer()->get(ManagerRegistry::class);
 
