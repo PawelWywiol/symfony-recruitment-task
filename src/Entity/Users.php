@@ -19,6 +19,7 @@ class Users
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column]
+    // @phpstan-ignore property.unusedType
     private ?int $id = null;
 
     #[ORM\Column(length: 60, nullable: true)]
@@ -154,7 +155,6 @@ class Users
     public function removeAddress(UsersAddresses $address): static
     {
         if ($this->addresses->removeElement($address)) {
-            // set the owning side to null (unless already changed)
             if ($address->getUser() === $this) {
                 $address->setUser(null);
             }

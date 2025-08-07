@@ -15,7 +15,6 @@ final class UsersControllerTest extends WebTestCase
     private KernelBrowser $client;
     private EntityManagerInterface $manager;
     private EntityRepository $userRepository;
-    private string $path = '/users/';
 
     protected function setUp(): void
     {
@@ -23,129 +22,183 @@ final class UsersControllerTest extends WebTestCase
         $this->manager = static::getContainer()->get('doctrine')->getManager();
         $this->userRepository = $this->manager->getRepository(Users::class);
 
+        // Clean up existing data
         foreach ($this->userRepository->findAll() as $object) {
             $this->manager->remove($object);
         }
-
         $this->manager->flush();
     }
 
     public function testIndex(): void
     {
         $this->client->followRedirects();
-        $crawler = $this->client->request('GET', $this->path);
+        $this->client->request('GET', '/users');
 
         self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('User index');
+        self::assertPageTitleContains('Users List');
+    }
 
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first()->text());
+    public function testList(): void
+    {
+        $this->client->request('GET', '/users/list/1');
+
+        self::assertResponseStatusCodeSame(200);
+        self::assertPageTitleContains('Users List');
+    }
+
+    public function testListWithInvalidPage(): void
+    {
+        $this->client->request('GET', '/users/list/0');
+
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testNew(): void
     {
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
+        $this->client->request('GET', '/users/new');
 
         self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'user[firstName]' => 'Testing',
-            'user[lastName]' => 'Testing',
-            'user[initials]' => 'Testing',
-            'user[email]' => 'Testing',
-            'user[status]' => 'Testing',
-            'user[createdAt]' => 'Testing',
-            'user[updatedAt]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects($this->path);
-
-        self::assertSame(1, $this->userRepository->count([]));
+        self::assertPageTitleContains('New User');
     }
 
-    public function testShow(): void
+    public function testNewSubmit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new Users();
-        $fixture->setFirstName('My Title');
-        $fixture->setLastName('My Title');
-        $fixture->setInitials('My Title');
-        $fixture->setEmail('My Title');
-        $fixture->setStatus('My Title');
-        $fixture->setCreatedAt('My Title');
-        $fixture->setUpdatedAt('My Title');
+        $this->client->request('GET', '/users/new');
+        
+        $this->client->submitForm('Save', [
+            'user[firstName]' => 'John',
+            'user[lastName]' => 'Doe',
+            'user[initials]' => 'JD',
+            'user[email]' => 'john.doe@example.com',
+            'user[status]' => 'ACTIVE',
+        ]);
 
-        $this->manager->persist($fixture);
-        $this->manager->flush();
+        self::assertResponseRedirects();
+        
+        $users = $this->userRepository->findAll();
+        self::assertCount(1, $users);
+        self::assertSame('John', $users[0]->getFirstName());
+        self::assertSame('Doe', $users[0]->getLastName());
+        self::assertSame('john.doe@example.com', $users[0]->getEmail());
+    }
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
+    public function testNewSubmitWithValidationErrors(): void
+    {
+        $this->client->request('GET', '/users/new');
+        
+        $this->client->submitForm('Save', [
+            'user[firstName]' => '',
+            'user[lastName]' => '', // Required field
+            'user[email]' => 'invalid-email', // Invalid email
+            'user[status]' => 'ACTIVE',
+        ]);
 
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('User');
-
-        // Use assertions to check that the properties are properly displayed.
+        self::assertResponseStatusCodeSame(200); // Form should be re-displayed with errors
     }
 
     public function testEdit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new Users();
-        $fixture->setFirstName('Value');
-        $fixture->setLastName('Value');
-        $fixture->setInitials('Value');
-        $fixture->setEmail('Value');
-        $fixture->setStatus('Value');
-        $fixture->setCreatedAt('Value');
-        $fixture->setUpdatedAt('Value');
-
-        $this->manager->persist($fixture);
+        // Create a test user
+        $user = new Users();
+        $user->setFirstName('John');
+        $user->setLastName('Doe');
+        $user->setEmail('john.doe@example.com');
+        $user->setStatus('ACTIVE');
+        
+        $this->manager->persist($user);
         $this->manager->flush();
 
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
+        $this->client->request('GET', sprintf('/users/edit/%d', $user->getId()));
 
-        $this->client->submitForm('Update', [
-            'user[firstName]' => 'Something New',
-            'user[lastName]' => 'Something New',
-            'user[initials]' => 'Something New',
-            'user[email]' => 'Something New',
-            'user[status]' => 'Something New',
-            'user[createdAt]' => 'Something New',
-            'user[updatedAt]' => 'Something New',
-        ]);
-
-        self::assertResponseRedirects('/users/');
-
-        $fixture = $this->userRepository->findAll();
-
-        self::assertSame('Something New', $fixture[0]->getFirstName());
-        self::assertSame('Something New', $fixture[0]->getLastName());
-        self::assertSame('Something New', $fixture[0]->getInitials());
-        self::assertSame('Something New', $fixture[0]->getEmail());
-        self::assertSame('Something New', $fixture[0]->getStatus());
-        self::assertSame('Something New', $fixture[0]->getCreatedAt());
-        self::assertSame('Something New', $fixture[0]->getUpdatedAt());
+        self::assertResponseStatusCodeSame(200);
+        self::assertPageTitleContains('Edit User');
     }
 
-    public function testRemove(): void
+    public function testEditSubmit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new Users();
-        $fixture->setFirstName('Value');
-        $fixture->setLastName('Value');
-        $fixture->setInitials('Value');
-        $fixture->setEmail('Value');
-        $fixture->setStatus('Value');
-        $fixture->setCreatedAt('Value');
-        $fixture->setUpdatedAt('Value');
-
-        $this->manager->persist($fixture);
+        // Create a test user
+        $user = new Users();
+        $user->setFirstName('John');
+        $user->setLastName('Doe');
+        $user->setEmail('john.doe@example.com');
+        $user->setStatus('ACTIVE');
+        
+        $this->manager->persist($user);
         $this->manager->flush();
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
+        $this->client->request('GET', sprintf('/users/edit/%d', $user->getId()));
+        
+        $this->client->submitForm('Update', [
+            'user[firstName]' => 'Jane',
+            'user[lastName]' => 'Smith',
+            'user[initials]' => 'JS',
+            'user[email]' => 'jane.smith@example.com',
+            'user[status]' => 'INACTIVE',
+        ]);
 
-        self::assertResponseRedirects('/users/');
+        self::assertResponseRedirects();
+        
+        $this->manager->refresh($user);
+        self::assertSame('Jane', $user->getFirstName());
+        self::assertSame('Smith', $user->getLastName());
+        self::assertSame('jane.smith@example.com', $user->getEmail());
+        self::assertSame('INACTIVE', $user->getStatus());
+    }
+
+    public function testEditNotFound(): void
+    {
+        $this->client->request('GET', '/users/edit/999999');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testDelete(): void
+    {
+        // Create a test user
+        $user = new Users();
+        $user->setFirstName('John');
+        $user->setLastName('Doe');
+        $user->setEmail('john.doe@example.com');
+        $user->setStatus('ACTIVE');
+        
+        $this->manager->persist($user);
+        $this->manager->flush();
+
+        $userId = $user->getId();
+        
+        $this->client->request('POST', sprintf('/users/delete/%d', $userId), [], [], [
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
+        ], '_token=test_token');
+
+        self::assertResponseRedirects();
         self::assertSame(0, $this->userRepository->count([]));
+    }
+
+    public function testDeleteNotFound(): void
+    {
+        $this->client->request('POST', '/users/delete/999999');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testDeleteWithInvalidCsrfToken(): void
+    {
+        // Create a test user
+        $user = new Users();
+        $user->setFirstName('John');
+        $user->setLastName('Doe');
+        $user->setEmail('john.doe@example.com');
+        $user->setStatus('ACTIVE');
+        
+        $this->manager->persist($user);
+        $this->manager->flush();
+
+        $this->client->request('POST', sprintf('/users/delete/%d', $user->getId()), [], [], [
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
+        ], '_token=invalid_token');
+
+        self::assertResponseRedirects();
+        // User should not be deleted due to invalid CSRF token
+        self::assertSame(1, $this->userRepository->count([]));
     }
 }

@@ -22,10 +22,6 @@ final class UsersAddressesController extends AbstractController
     #[Route('/list/{page}', name: 'app_users_addresses_list', methods: ['GET'])]
     public function list(Users $user, UsersAddressesRepository $usersAddressesRepository, int $page): Response
     {
-        if ($user === null) {
-            throw $this->createNotFoundException('User not found');
-        }
-
         if ($page < self::DEFAULT_PAGE_INDEX) {
             throw $this->createNotFoundException('Page not found');
         }
@@ -42,10 +38,6 @@ final class UsersAddressesController extends AbstractController
     #[Route('/new', name: 'app_users_addresses_new', methods: ['GET', 'POST'])]
     public function new(Users $user, Request $request, EntityManagerInterface $entityManager): Response
     {
-        if ($user === null) {
-            throw $this->createNotFoundException('User not found');
-        }
-
         $usersAddress = new UsersAddresses();
         $form = $this->createForm(UsersAddressesType::class, $usersAddress);
         $form->handleRequest($request);
@@ -74,10 +66,6 @@ final class UsersAddressesController extends AbstractController
         string $validFrom,
         EntityManagerInterface $entityManager,
     ): Response {
-        if ($user === null) {
-            throw $this->createNotFoundException('User not found');
-        }
-
         $validFromTimestamp = (int) $validFrom;
         $validFromDate = new \DateTime();
         $validFromDate->setTimestamp($validFromTimestamp);
@@ -128,10 +116,6 @@ final class UsersAddressesController extends AbstractController
         EntityManagerInterface $entityManager,
         Users $user
     ): Response {
-        if ($user === null) {
-            throw $this->createNotFoundException('User not found');
-        }
-
         if ($this->isCsrfTokenValid(
             'delete' . $addressType . $validFrom,
             $request->getPayload()->getString('_token')

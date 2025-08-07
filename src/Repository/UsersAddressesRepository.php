@@ -22,9 +22,9 @@ class UsersAddressesRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return UsersAddresses[] Returns an array of UsersAddresses objects
+     * @return array<string, mixed>
      */
-    public function paginate(int $userId, int $page = 1, int $limit = self::MAX_ITEMS_PER_PAGE): array
+    public function paginate(int $userId, int $page = 1, int $limit = self::MAX_ITEMS_PER_PAGE)
     {
         $count = $this->count(['user' => $userId]);
 

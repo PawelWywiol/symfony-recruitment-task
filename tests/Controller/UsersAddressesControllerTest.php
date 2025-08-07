@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\Users;
 use App\Entity\UsersAddresses;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
@@ -15,155 +16,177 @@ final class UsersAddressesControllerTest extends WebTestCase
     private KernelBrowser $client;
     private EntityManagerInterface $manager;
     private EntityRepository $usersAddressRepository;
-    private string $path = '/users/addresses/';
+    private EntityRepository $usersRepository;
+    private Users $testUser;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $this->manager = static::getContainer()->get('doctrine')->getManager();
         $this->usersAddressRepository = $this->manager->getRepository(UsersAddresses::class);
+        $this->usersRepository = $this->manager->getRepository(Users::class);
 
+        // Clean up existing data
         foreach ($this->usersAddressRepository->findAll() as $object) {
             $this->manager->remove($object);
         }
+        foreach ($this->usersRepository->findAll() as $object) {
+            $this->manager->remove($object);
+        }
+        $this->manager->flush();
 
+        // Create a test user
+        $this->testUser = new Users();
+        $this->testUser->setFirstName('John');
+        $this->testUser->setLastName('Doe');
+        $this->testUser->setEmail('john.doe@example.com');
+        $this->testUser->setStatus('ACTIVE');
+        $this->manager->persist($this->testUser);
         $this->manager->flush();
     }
 
-    public function testIndex(): void
+    public function testList(): void
     {
-        $this->client->followRedirects();
-        $crawler = $this->client->request('GET', $this->path);
+        $this->client->request('GET', sprintf('/user/%d/addresses/list/1', $this->testUser->getId()));
 
         self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('UsersAddress index');
+        self::assertPageTitleContains('Users Addresses');
+    }
 
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first()->text());
+    public function testListWithInvalidPage(): void
+    {
+        $this->client->request('GET', sprintf('/user/%d/addresses/list/0', $this->testUser->getId()));
+
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testNew(): void
     {
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
+        $this->client->request('GET', sprintf('/user/%d/addresses/new', $this->testUser->getId()));
 
         self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'users_address[addressType]' => 'Testing',
-            'users_address[validFrom]' => 'Testing',
-            'users_address[postCode]' => 'Testing',
-            'users_address[city]' => 'Testing',
-            'users_address[countryCode]' => 'Testing',
-            'users_address[street]' => 'Testing',
-            'users_address[buildingNumber]' => 'Testing',
-            'users_address[createdAt]' => 'Testing',
-            'users_address[updatedAt]' => 'Testing',
-            'users_address[user]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects($this->path);
-
-        self::assertSame(1, $this->usersAddressRepository->count([]));
+        self::assertPageTitleContains('New Address');
     }
 
-    public function testShow(): void
+    public function testNewSubmit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new UsersAddresses();
-        $fixture->setAddressType('My Title');
-        $fixture->setValidFrom('My Title');
-        $fixture->setPostCode('My Title');
-        $fixture->setCity('My Title');
-        $fixture->setCountryCode('My Title');
-        $fixture->setStreet('My Title');
-        $fixture->setBuildingNumber('My Title');
-        $fixture->setCreatedAt('My Title');
-        $fixture->setUpdatedAt('My Title');
-        $fixture->setUser('My Title');
+        $this->client->request('GET', sprintf('/user/%d/addresses/new', $this->testUser->getId()));
 
-        $this->manager->persist($fixture);
-        $this->manager->flush();
+        $this->client->submitForm('Save', [
+            'users_addresses[addressType]' => 'HOME',
+            'users_addresses[validFrom]' => '2024-01-01T00:00:00',
+            'users_addresses[street]' => 'Test Street',
+            'users_addresses[buildingNumber]' => '123',
+            'users_addresses[postCode]' => '12345',
+            'users_addresses[city]' => 'Test City',
+            'users_addresses[countryCode]' => 'USA',
+        ]);
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
+        self::assertResponseRedirects();
 
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('UsersAddress');
-
-        // Use assertions to check that the properties are properly displayed.
+        $addresses = $this->usersAddressRepository->findAll();
+        self::assertCount(1, $addresses);
+        self::assertSame('HOME', $addresses[0]->getAddressType());
+        self::assertSame('Test Street', $addresses[0]->getStreet());
     }
 
     public function testEdit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new UsersAddresses();
-        $fixture->setAddressType('Value');
-        $fixture->setValidFrom('Value');
-        $fixture->setPostCode('Value');
-        $fixture->setCity('Value');
-        $fixture->setCountryCode('Value');
-        $fixture->setStreet('Value');
-        $fixture->setBuildingNumber('Value');
-        $fixture->setCreatedAt('Value');
-        $fixture->setUpdatedAt('Value');
-        $fixture->setUser('Value');
+        // Create a test address
+        $address = new UsersAddresses();
+        $address->setUser($this->testUser);
+        $address->setAddressType('HOME');
+        $address->setValidFrom(new \DateTime('2024-01-01 12:00:00'));
+        $address->setStreet('Original Street');
+        $address->setBuildingNumber('123');
+        $address->setPostCode('12345');
+        $address->setCity('Original City');
+        $address->setCountryCode('USA');
 
-        $this->manager->persist($fixture);
+        $this->manager->persist($address);
         $this->manager->flush();
 
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
+        $validFromTimestamp = $address->getValidFrom()->getTimestamp();
 
-        $this->client->submitForm('Update', [
-            'users_address[addressType]' => 'Something New',
-            'users_address[validFrom]' => 'Something New',
-            'users_address[postCode]' => 'Something New',
-            'users_address[city]' => 'Something New',
-            'users_address[countryCode]' => 'Something New',
-            'users_address[street]' => 'Something New',
-            'users_address[buildingNumber]' => 'Something New',
-            'users_address[createdAt]' => 'Something New',
-            'users_address[updatedAt]' => 'Something New',
-            'users_address[user]' => 'Something New',
-        ]);
+        $this->client->request('GET', sprintf('/user/%d/addresses/edit/HOME/%d', $this->testUser->getId(), $validFromTimestamp));
 
-        self::assertResponseRedirects('/users/addresses/');
-
-        $fixture = $this->usersAddressRepository->findAll();
-
-        self::assertSame('Something New', $fixture[0]->getAddressType());
-        self::assertSame('Something New', $fixture[0]->getValidFrom());
-        self::assertSame('Something New', $fixture[0]->getPostCode());
-        self::assertSame('Something New', $fixture[0]->getCity());
-        self::assertSame('Something New', $fixture[0]->getCountryCode());
-        self::assertSame('Something New', $fixture[0]->getStreet());
-        self::assertSame('Something New', $fixture[0]->getBuildingNumber());
-        self::assertSame('Something New', $fixture[0]->getCreatedAt());
-        self::assertSame('Something New', $fixture[0]->getUpdatedAt());
-        self::assertSame('Something New', $fixture[0]->getUser());
+        self::assertResponseStatusCodeSame(200);
+        self::assertPageTitleContains('Edit Address');
     }
 
-    public function testRemove(): void
+    public function testEditSubmit(): void
     {
-        $this->markTestIncomplete();
-        $fixture = new UsersAddresses();
-        $fixture->setAddressType('Value');
-        $fixture->setValidFrom('Value');
-        $fixture->setPostCode('Value');
-        $fixture->setCity('Value');
-        $fixture->setCountryCode('Value');
-        $fixture->setStreet('Value');
-        $fixture->setBuildingNumber('Value');
-        $fixture->setCreatedAt('Value');
-        $fixture->setUpdatedAt('Value');
-        $fixture->setUser('Value');
+        // Create a test address
+        $address = new UsersAddresses();
+        $address->setUser($this->testUser);
+        $address->setAddressType('HOME');
+        $address->setValidFrom(new \DateTime('2024-01-01 12:00:00'));
+        $address->setStreet('Original Street');
+        $address->setBuildingNumber('123');
+        $address->setPostCode('12345');
+        $address->setCity('Original City');
+        $address->setCountryCode('USA');
 
-        $this->manager->persist($fixture);
+        $this->manager->persist($address);
         $this->manager->flush();
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
+        $validFromTimestamp = $address->getValidFrom()->getTimestamp();
 
-        self::assertResponseRedirects('/users/addresses/');
+        $this->client->request('GET', sprintf('/user/%d/addresses/edit/HOME/%d', $this->testUser->getId(), $validFromTimestamp));
+
+        $this->client->submitForm('Update', [
+            'users_addresses[addressType]' => 'WORK',
+            'users_addresses[validFrom]' => '2024-01-01T12:00:00',
+            'users_addresses[street]' => 'Updated Street',
+            'users_addresses[buildingNumber]' => '456',
+            'users_addresses[postCode]' => '54321',
+            'users_addresses[city]' => 'Updated City',
+            'users_addresses[countryCode]' => 'CAN',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->manager->refresh($address);
+        self::assertSame('WORK', $address->getAddressType());
+        self::assertSame('Updated Street', $address->getStreet());
+        self::assertSame('Updated City', $address->getCity());
+    }
+
+    public function testEditNotFound(): void
+    {
+        $this->client->request('GET', sprintf('/user/%d/addresses/edit/HOME/1234567890', $this->testUser->getId()));
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testDelete(): void
+    {
+        // Create a test address
+        $address = new UsersAddresses();
+        $address->setUser($this->testUser);
+        $address->setAddressType('HOME');
+        $address->setValidFrom(new \DateTime('2024-01-01 12:00:00'));
+        $address->setStreet('Test Street');
+        $address->setBuildingNumber('123');
+        $address->setPostCode('12345');
+        $address->setCity('Test City');
+        $address->setCountryCode('USA');
+
+        $this->manager->persist($address);
+        $this->manager->flush();
+
+        $validFromTimestamp = $address->getValidFrom()->getTimestamp();
+
+        $this->client->request('POST', sprintf('/user/%d/addresses/delete/HOME/%d', $this->testUser->getId(), $validFromTimestamp));
+
+        self::assertResponseRedirects();
         self::assertSame(0, $this->usersAddressRepository->count([]));
+    }
+
+    public function testDeleteNotFound(): void
+    {
+        $this->client->request('POST', sprintf('/user/%d/addresses/delete/HOME/1234567890', $this->testUser->getId()));
+
+        self::assertResponseStatusCodeSame(404);
     }
 }
