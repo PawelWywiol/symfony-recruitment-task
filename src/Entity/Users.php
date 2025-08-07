@@ -19,7 +19,6 @@ class Users
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column]
-    // @phpstan-ignore property.unusedType
     private ?int $id = null;
 
     #[ORM\Column(length: 60, nullable: true)]

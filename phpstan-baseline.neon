@@ -1,0 +1,79 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$userId of method App\\Repository\\UsersAddressesRepository\:\:paginate\(\) expects int, int\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/UsersAddressesController.php
+
+		-
+			message: '#^Property App\\Entity\\Users\:\:\$addresses with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Users.php
+
+		-
+			message: '#^Property App\\Entity\\Users\:\:\$id \(int\|null\) is never assigned int so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: src/Entity/Users.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getAddressType\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersAddressesControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getManager\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersAddressesControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getStreet\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersAddressesControllerTest.php
+
+		-
+			message: '#^Property App\\Tests\\Controller\\UsersAddressesControllerTest\:\:\$usersAddressRepository with generic class Doctrine\\ORM\\EntityRepository does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: tests/Controller/UsersAddressesControllerTest.php
+
+		-
+			message: '#^Property App\\Tests\\Controller\\UsersAddressesControllerTest\:\:\$usersRepository with generic class Doctrine\\ORM\\EntityRepository does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: tests/Controller/UsersAddressesControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getEmail\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getFirstName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getLastName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersControllerTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getManager\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Controller/UsersControllerTest.php
+
+		-
+			message: '#^Property App\\Tests\\Controller\\UsersControllerTest\:\:\$userRepository with generic class Doctrine\\ORM\\EntityRepository does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: tests/Controller/UsersControllerTest.php

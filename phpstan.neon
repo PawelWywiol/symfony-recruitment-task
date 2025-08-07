@@ -1,6 +1,15 @@
 parameters:
     # Level 0 is the most lenient, level 9 is the strictest
-    level: 5
+    level: 9
+
+    checkExplicitMixedMissingReturn: true
+    checkInternalClassCaseSensitivity: true
+    reportAlwaysTrueInLastCondition: true
+    reportMaybesInMethodSignatures: true
+    reportMaybesInPropertyPhpDocTypes: true
+    reportStaticMethodSignatures: true
+    reportWrongPhpDocTypeInVarTag: true
+
 
     # Paths to analyze
     paths:
