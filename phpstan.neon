@@ -1,0 +1,22 @@
+parameters:
+    # Level 0 is the most lenient, level 9 is the strictest
+    level: 5
+
+    # Paths to analyze
+    paths:
+        - src
+        - tests
+
+    # Exclude paths (only include if they exist)
+    excludePaths:
+        # Add specific paths to exclude here if needed
+        # - src/SomeDirectory
+
+    # Ignore specific errors if needed
+    ignoreErrors:
+        # Add specific error patterns to ignore here if needed
+        # - '#Call to an undefined method [a-zA-Z0-9\\_]+::[a-zA-Z0-9\\_]+#'
+
+    # Include paths for custom extensions
+    scanFiles:
+        - vendor/autoload.php
