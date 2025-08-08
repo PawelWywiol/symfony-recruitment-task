@@ -1,0 +1,23 @@
+services:
+  symfony-recruitment-task:
+    container_name: symfony-recruitment-task
+    build:
+      context: ./docker
+      target: frankenphp_dev
+    volumes:
+      - ./:/app
+      - ./docker/frankenphp/Caddyfile:/etc/frankenphp/Caddyfile:ro
+      - ./docker/frankenphp/conf.d/20-app.prod.ini:/usr/local/etc/php/app.conf.d/20-app.prod.ini:ro
+      # If you develop on Mac or Windows you can remove the vendor/ directory
+      #  from the bind-mount for better performance by enabling the next line:
+      #- /app/vendor
+    env_file:
+      - .env.prod
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      DATABASE_URL: ${DATABASE_URL}
+      APP_SECRET: ${APP_SECRET}
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_PUBLISHER_JWT_KEY}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_SUBSCRIBER_JWT_KEY}
+    network_mode: host
+    tty: true
