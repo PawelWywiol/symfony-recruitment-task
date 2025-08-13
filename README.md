@@ -2,6 +2,55 @@
 
 This repository is a Symfony version of the [NextJS recruitment task](https://github.com/PawelWywiol/nextjs-recruitment-task). It implements a simple application to manage users' addresses, similar to the NextJS version.
 
+## Setup
+
+### Development Environment
+
+For development, you can run the PostgreSQL database using Docker:
+
+```bash
+# Copy the example env file and modify as needed
+cp .env.example .env.dev.local
+
+# Start the development database
+docker compose --env-file .env.dev.local up -d
+```
+
+Then start the application locally:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Generate Prisma client
+pnpm run generate-types
+
+# Run in development mode
+pnpm run start:dev
+```
+
+### Production Environment
+
+Copy the example env file and modify it to point to your production database:
+
+```bash
+cp .env.example .env
+```
+
+Build docker image:
+
+```bash
+docker compose --env-file .env -f compose.production.yml build --no-cache
+```
+
+and run the application:
+
+```bash
+docker compose --env-file .env -f compose.production.yml up -d
+```
+
+The app will be available at `https://localhost`.
+
 ## Task
 
 Create a ~~NextJS~~ Symfony application which allows you to manage users' addresses. The database schema with sample records is provided for you, you can set it up by running:
